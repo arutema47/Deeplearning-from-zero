@@ -1,0 +1,33 @@
+from tensorflow.examples.tutorials.mnist import input_data
+mnist = input_data.read_data_sets('MNIST_data', one_hot=True)
+
+import tensorflow as tf
+
+x = tf.placeholder(tf.float32, [None, 784]) #tensor for input
+y_ = tf.placeholder(tf.float32, [None, 10]) #tensor for output
+
+W = tf.Variable(tf.zeros([784, 10])) #FC weights
+b = tf.Variable(tf.zeros([10])) #FC bias
+
+y = tf.nn.softmax(tf.matmul(x, W) + b) #ニューロン演算+softmaxで出力を得る
+
+cross_entropy = tf.reduce_mean(-tf.reduce_sum(y_ * tf.log(y), reduction_indices=[1]))
+#誤差エネルギー
+
+### Optimizer
+#train_step = tf.train.GradientDescentOptimizer(0.5).minimize(cross_entropy) #GDS 0.92
+#train_step =tf.train.AdamOptimizer(1e-4).minimize(cross_entropy) #ADAM 0.85
+#train_step =tf.train.MomentumOptimizer(5e-1,5e-1).minimize(cross_entropy) #Momentum     0.9157 
+               
+sess = tf.InteractiveSession()
+tf.global_variables_initializer().run() #initialize valuables
+
+for i in range(1000):
+  batch_xs, batch_ys = mnist.train.next_batch(100)
+  sess.run(train_step, feed_dict={x: batch_xs, y_: batch_ys})
+  
+
+correct_prediction = tf.equal(tf.argmax(y,1), tf.argmax(y_,1))
+accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+
+print(sess.run(accuracy, feed_dict={x: mnist.test.images, y_: mnist.test.labels}))
